@@ -1,28 +1,54 @@
 pipeline {
+    agent any
+     tools {
+        jdk 'JAVA_8'
+        // maven 'Maven-3.6.3'
+          }
+          stages {
+              stage('clone project') {
+                                    steps {
+                      git branch:'master',
+                      url:'https://github.com/sivalakkireddy9/sBoot'                                    
+                                             }
+                                    }
+              stage('clean') {
+                               steps {
+                                    sh 'mvn clean'
+                                    }
+                            }
 
-	agent any
-	tools {
-		maven 'm360'
-	}
+               stage('compile') {
+                            steps {
+                                 sh 'mvn compile'
+                                 }
+                               }
 
-	stages {
-	  stage('build') {
-		steps {
-		  sh 'mvn install -DskipTests'
-		}
-	  }
+                stage('test') {
+                               steps {
+                                  sh 'mvn test'
+                                    }
+                            }
 
-	  stage('test') {
-		steps {
-		  sh 'mvn test'
-		  
-		  post {
-				archiveArtifacts artifacts: 'target/**.jar', followSymlinks: false
-				junit stdioRetention: '', testResults: 'target/surefire-reports/*.xml'
-			}
-		}
-	  }
-
-}
-
-}
+                stage('build') {
+                                steps {
+                                    sh 'mvn clean install'
+                                    }
+                            }
+          }        
+        post {
+        success {
+            emailext(
+                subject: "Build Success: ${currentBuild.fullDisplayName}",
+                body: "The build ${env.BUILD_URL} was successful!",
+                to: "sivalakkireddy999@gmail.com"
+            )
+        }
+        failure {
+            emailext(
+                subject: "Build Failed: ${currentBuild.fullDisplayName}",
+                body: "The build ${env.BUILD_URL} failed. Please check.",
+                to: "sivalakkireddy999@gmail.com"
+            )
+        }
+     }
+   }
